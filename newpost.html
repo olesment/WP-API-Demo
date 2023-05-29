@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uue postituse loomine Wordpressi</title>
+</head>
+<body>
+    <form id = "postForm" enctype = "multipart/form-data">
+        <label for = "csvFile">Vali CSV fail: </label>
+        <input type="file" name = "csvFile" id = "csvFile" accept = ".csv" required />
+        <br/>
+        <label for = "url">Wordpressi Rest API Url</label>
+        <input
+            type = "url"
+            name = "url"
+            id = "url"
+            value = "lisa oma url (siin ol imuu asi kirjas)"
+            length = "200"
+            size = "120"
+            required 
+        />
+        <br/>
+        <label for = "username">Kasutajanimi:</label> 
+        <input type = "text" name = "username" id = "username" required />
+        <br/>
+        <label for = "password">Salasona:</label>
+        <input type = "submit" value = "Postita" />
+    </form>
+
+    <div id = "result"></div>
+
+    <script>
+        const form = document.getElementById("postForm"); //HTMLIS panime formi IDks post form ja siin see script p;;rdub selle poole 
+        form.addEventListener("submit", 
+            function(event){
+                event.preventDefault(); // takistab ligil URL avamist // yldiselt kantseldab juhtumi kui see on canceldatav
+
+                const url = form.url.value;
+                const password = form.password.value;
+                const file = form.csvFile.files[0];
+
+                const headers = new Headers();
+                headers.append("Content-Type" , "application/json");
+                headers.append("Authorization","Basic " +btoa(username + ":" + password)); 
+
+                /*The btoa() method creates a Base64-encoded ASCII string from a binary string (i.e., a string in which each character in the string is treated as a byte of binary data).You can use this method to encode data which may otherwise cause communication problems, transmit it, then use the atob() method to decode the data again. For example, you can encode control characters such as ASCII values 0 through 31. B TO A and A to B */
+
+                const reader = new FileReader();
+                reader.readAsText(file, "utf-8");
+                reader.onload = function() {
+                    
+                    const csv = reader.result;
+                    const lines = csv.split(/\r\n/) /*
+                    In JavaScript, /\r\n/ represents a regular expression. Regular expressions are used to match patterns in strings.The specific regular expression /\r\n/ is used to match the carriage return (\r) followed by a newline (\n) character. This pattern is commonly used to match line breaks in text files. Carriage on siis see wordi kriips - kursor vms. 
+                    */
+
+                    for(let i = 0; i<lines.length; i++){
+                        const data = lines[i].split(";");
+
+                        const postData = {title:data[0], content: data[1], status: "publish",}; /*miks title on 0- ja data on 1? kas seep'rast et csvs rida ei alga 0st?*/
+
+                        console.log(postData);
+
+                        fetch(url,{
+                            method:"POST",
+                            headers:"headers",
+                            body: JSON.stringify(postData),
+                            credentials: "include",
+                            auth: `${username}:${password}`, // miks siin on need imelikud ylakomad ja l6pus veel koma?
+                        })
+                            .then(function(response){
+                                const status = response.status;
+                                response.json().then(function(data){
+                                    const resultDiv = document.getElementById("result");
+                                    const message = 
+                                        "Tulemus: " + status + " - " + JSON.stringify(data);
+                                    resultDiv.innerHTML += "<p>" + message + "</p>";
+                                });
+                            })
+                            .catch(function(error){
+                                console.error(error);
+                                const resultDiv = document.getElementById("result");
+                                resultDiv.innerHTML += "<p>Viga: " + error.message + "</p>";
+                            });
+                    }
+                };
+
+            });
+
+        </script>
+    
+    </body>
+</html>
