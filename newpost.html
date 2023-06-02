@@ -40,6 +40,7 @@
 
                 const url = form.url.value;
                 const password = form.password.value;
+                const username = form.username.value; // see oli enne puudu pmst saatis tyhja UN ja seet6ttu error
                 const file = form.csvFile.files[0];
 
                 const headers = new Headers();
@@ -66,7 +67,7 @@
 
                         fetch(url,{
                             method:"POST",
-                            headers:"headers",
+                            headers:headers,
                             body: JSON.stringify(postData),
                             credentials: "include",
                             auth: `${username}:${password}`, // miks siin on need imelikud ylakomad ja l6pus veel koma?
